@@ -1,4 +1,11 @@
-bcirl-framework/
+# DynamicRL: A Framework for Interactive Reinforcement Learning
+
+This repository contains the framework for `DynamicRL`, a toolkit for dynamically and interactively tuning Reinforcement Learning agents during training.
+
+## Project Structure
+
+```text
+DynamicRL/
 ├── .gitignore
 ├── README.md
 ├── evaluate.py
@@ -6,7 +13,7 @@ bcirl-framework/
 ├── train.py
 ├── configs/
 │   ├── ppo_cartpole.yaml
-│   └── ppo_mujoco_bci.yaml
+│   └── ppo_mujoco.yaml
 └── src/
     ├── agents/
     │   ├── __init__.py
@@ -27,5 +34,3 @@ bcirl-framework/
         ├── logging.py
         ├── replay_buffer.py
         └── video.py
-=======
-# DynamicRL
