@@ -2,7 +2,7 @@
 
 This repository contains the framework for `DynamicRL`, a toolkit for dynamically and interactively tuning Reinforcement Learning agents during training.
 
-## Project Structure
+## Project Structure:
 
 ```text
 DynamicRL/
