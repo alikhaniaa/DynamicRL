@@ -27,14 +27,14 @@ class Args:
     # Logging & Visualization
     # -------------------------------------------------------------------
     track: bool = True
-    wandb_project_name: str = "ppoManipulation"
+    wandb_project_name: str = "DynamicRL"
     wandb_entity: str = None  
     capture_video: bool = True
     
     # -------------------------------------------------------------------
     # Environment Configuration
     # -------------------------------------------------------------------
-    env_id: str = "NOT DEFINED FOR NOW, MAYBE MUJOCO"
+    env_id: str = "CartPole-v1"
     total_timesteps: int = 100000
     # Number of parallel game environmets
     num_envs: int = 4
@@ -75,3 +75,90 @@ class Args:
     batch_size: int = 0
     minibatch_size: int = 0
     num_iterations: int = 0
+
+
+'''
+    IMPLEMENTING BASIC PPO FOR NOW
+'''
+    
+# Helper function to create a single env instance
+def make_env(env_id, idx, run_home):
+    def thunk():
+        # TODO add video capturing later(dynamic since I need it a lot)
+        env = gym.make(env_id)
+        env = gym.wrappers.RecordEpisodeStatistics(env)
+        print(env)
+        return env
+    return thunk
+    
+# helper to initialize network layers
+def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
+    torch.nn.init.orthogonal_(layer.weight, std)
+    torch.nn.init.constant_(layer.bias, bias_const)
+    return layer
+    
+# agent class to define NN architecture contain both actor and critic(policy and val function)
+class Agent(nn.Module):
+    def __init__(self, envs):
+        super().__init__()
+        
+        # Critic network estimation of the value of alpha state
+        self.critic = nn.Sequential(
+            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 1), std=1.0)
+        )
+    
+        #Actor network decides which action to take
+        self.actor = nn.Sequential(
+            layer_init(nn.Linear(np.array(envs.single_observation_space.shape).prod(), 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, envs.signel_action_space.n), std=0.01)
+        )
+        
+    def get_value(self, x):
+        return self.critic(x)
+        
+    def get_action_and_value(self, x, action=None):
+        logits = self.actor(x)
+        probs = Categorical(logits=logits)
+        if action is None:
+            action = probs.sample()
+        return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+
+if __name__ == "__main__":
+    args = tyro.cli(Args)
+    args.batch_size = int(args.num_envs * args.num_steps)
+    args.minibatch_size = int(args.batch_size // args.num_minibatch)
+    args.num_iterations = args.total_timesteps // args.batch_size
+    run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    
+    # tensorboard for logging --> 'tensorboard --logdir runs'
+    writer = SummaryWriter(f"runs/{run_name}")
+    writer.add_text(
+        "hyperparameters",
+        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}" for key, value in vars(args).items()])),
+    )
+    
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.backends.cudnn.deterministic = args.torch_deterministic
+    
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    
+    # Env setup
+    envs = gym.vector.SyncVectorEnv(
+        [make_env(args.env_id, i, run_name) for i in range(args.num_envs)]
+    )
+    assert isinstance(envs.single_action_space, gym.spaces.Discrete)
+    
+    agent = Agent(envs).to(device)
+    optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    
+    obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
+    
