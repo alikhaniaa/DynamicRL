@@ -1,7 +1,88 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
 [project]
-name = "ppomanipulation"
-version = "0.1.0"
-description = "Add your description here"
+name = "dynamicrl"
+version = "0.0.1"
+description = "Manually Adjustable PPO training framework with (fill this later when add video capturing, mujoco etc)"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{name = "Alireza Alikhani"}]
+keywords = ["reinforcement-learning", "ppo", "mujoco", "gymnasium", "interactive", "optimization", "hyperparameters"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11"
+]
+
+dependencies = [
+  "torch>=2.2",
+  "numpy>=1.26",
+  "gymnasium[mujoco]>=0.29",
+  "mujoco>=3.1",
+  "omegaconf>=2.3",
+  "typer>=0.9",
+  "rich>=13.7",
+  "psutil>=5.9",
+  "pynvml>=11.5",
+  "tensorboard>=2.16",
+  "imageio>=2.34",
+  "imageio-ffmpeg>=0.4.9",
+  "opencv-python>=4.9",
+  "cloudpickle>=3.0"
+]
+
+[project.optional-dependencies]
+viz = ["wandb>=0.16"]
+profiling = ["torch-tb-profiler>=0.4"]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.1",
+  "mypy>=1.8",
+  "ruff>=0.3",
+  "pre-commit>=3.6"
+]
+
+[project.urls]
+# Homepage
+Repository = "https://github.com/alikhaniaa/DynamicRL.git"
+
+[project.scripts]
+dynamicrl = "dynamicrl.ui.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["dynamicrl"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "UP", "B"]      
+ignore = ["E203"]                              
+exclude = ["tests/data", "build", "dist"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+strict_equality = true
+plugins = []
+
+[tool.pytest.ini_options]
+addopts = "-ra -q --cov=dynamicrl --cov-report=term-missing"
+testpaths = ["tests"]
+xfail_strict = true
+filterwarnings = [
+  "ignore::DeprecationWarning:gymnasium",
+  "ignore::DeprecationWarning:tensorboard",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["dynamicrl"]
+
