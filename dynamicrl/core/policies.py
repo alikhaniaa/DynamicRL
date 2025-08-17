@@ -64,6 +64,10 @@ class ActorCriticMLP(PolicyNetworkBase, ValueNetworkBase):
         log_prob = dist.log_prob(action).sum(axis=-1)
         return action, log_prob
     
+    def predict_value(self, obs: ObservationType) -> ValueType:
+        features = self.shared_net(obs)
+        return self.value_head(features).squeeze(-1)
+    
     #Evaluate given action to compute their logProbs, policy entropy and state values --during-- PPO updates
     def evaluate_actions(self, obs: ObservationType, action: ActionType) -> Tuple[LogProbType, torch.Tensor, ValueType]:
         dist = self.get_distribution(obs)

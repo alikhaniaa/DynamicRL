@@ -21,7 +21,7 @@ class Batch:
     actions: ActionType
     rewards: RewardType
     dones: DoneType
-    next_observations: ObservationType
+    # next_observations: ObservationType
     log_probs: LogProbType
     values: ValueType
     advantages: torch.Tensor
@@ -38,7 +38,7 @@ class Batch:
             actions=self.actions.to(device),
             rewards=self.rewards.to(device),
             dones=self.dones.to(device),
-            next_observations=self.next_observations.to(device),
+            # next_observations=self.next_observations.to(device),
             log_probs=self.log_probs.to(device),
             values=self.values.to(device),
             advantages=self.advantages.to(device),

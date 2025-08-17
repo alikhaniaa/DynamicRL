@@ -15,9 +15,10 @@ algorithm:
 
 # training conf
 training:
-  totale_timesteps: 2_000_000
+  total_timesteps: 2_000_000
   rollout_steps: 2048
   learning_rate: 0.0003
+  seed: 42
 
 #nn architecture
 model:

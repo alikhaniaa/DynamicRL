@@ -34,7 +34,7 @@ class Quit:
 
 #request for immediate checkpoint of the training state
 @dataclass(frozen=True, slots=True)
-class CheckPointReq:
+class CheckpointReq:
     #optional tag for the checkpoint
     tag: Optional[str] = None 
 
@@ -54,7 +54,7 @@ class PatchBatch:
 """
     Union type for all possible control plane events
 """
-ControlEvent = Union[Pause, Resume, Quit, CheckPointReq, ParamPatch, PatchBatch]
+ControlEvent = Union[Pause, Resume, Quit, CheckpointReq, ParamPatch, PatchBatch]
 
 # Event bus imp -- wrapper for events, adding metadata for logging and debug mode
 @dataclass(frozen=True, slots=True)
@@ -71,8 +71,8 @@ class EventBus:
         
     #publish events to the bus
     async def publish(self, event:ControlEvent, source_id: str = "cli"):
-        evnelope = EventEnvelope(event=event, source_id=source_id)
-        await self._queue.put(evnelope)
+        envelope = EventEnvelope(event=event, source_id=source_id)
+        await self._queue.put(envelope)
         
     #retrive currently pending events from bus without blocking
     async def get_all_pending(self) -> list[EventEnvelope]:
