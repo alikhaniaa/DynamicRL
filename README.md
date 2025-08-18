@@ -12,11 +12,11 @@ DynamicRL/
 ├── LICENSE
 ├── configs/
 │   ├── defaults.yaml
-│   ├── algo/
+│   ├── config.yaml
+│   ├── algorithm/
 │   │   └── ppo.yaml
 │   ├── env/
-│   │   ├── mujoco_ant.yaml
-│   │   └── mujoco_humanoid.yaml
+│   │   ├── humanoid.yaml
 │   └── run/
 │       └── local_debug.yaml
 ├── dynamicrl/                   # installable package: `dynamicrl`
@@ -31,7 +31,7 @@ DynamicRL/
 │   │   ├── environment.py       # unified env runner (vec/async) + seeding
 │   │   ├── control.py           # control-plane event loop + HyperparamServer
 │   │   ├── checkpoint.py        # atomic save/restore of full state
-│   │   ├── logging.py           # Rich console, CSV/TensorBoard, sys metrics
+│   │   ├── logger.py            # Rich console, CSV/TensorBoard, sys metrics
 │   │   ├── video.py             # record/stream episodes; pause previews
 │   │   ├── events.py            # typed events (pause/resume/patch/etc.)
 │   │   └── utils.py             # RNG, determinism, typing helpers

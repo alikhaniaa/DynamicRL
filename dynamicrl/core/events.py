@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from typing import Any
 import asyncio
 import time
 import uuid
@@ -44,7 +44,7 @@ class ParamPatch:
     #dot notation path
     path: str
     op: PatchOp
-    value: any
+    value: Any
     
 #multi batch of hyperparam changes
 @dataclass(frozen=True, slots=True)

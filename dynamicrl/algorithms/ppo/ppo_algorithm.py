@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 import gymnasium as gym
+from typing import Any
 
 from dynamicrl.core.algorithm import RLAlgorithm
 from dynamicrl.core.advantage import compute_gae_advantages
@@ -13,7 +14,7 @@ from dynamicrl.core.types import Batch, ObservationType
     PPO implementation with logivs of policy, buffer, uptimizer and update
 """
 class PPOAlgorithm(RLAlgorithm):
-    def __init__(self, config: dict[str, any], obs_space: any, act_space: any):
+    def __init__(self, config: dict[str, Any], obs_space: Any, act_space: Any):
         super().__init__(config, obs_space, act_space)
         self.device = torch.device("cpu" if torch.cuda.is_available() else "cuda") #TODO CHANGE THIS LATER
         
@@ -187,14 +188,14 @@ class PPOAlgorithm(RLAlgorithm):
         return {"policy_loss": sum(policy_losses) / len(policy_losses), "value_loss": sum(value_losses) / len(value_losses), "entropy": sum(entropy_bonuses) / len(entropy_bonuses)}
 
                 
-    def get_state(self) -> dict[str, any]:
+    def get_state(self) -> dict[str, Any]:
         """Returns the current state for checkpointing."""
         return {
             "policy_state_dict": self.policy.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
         }
 
-    def load_state(self, state: dict[str, any]):
+    def load_state(self, state: dict[str, Any]):
         """Loads state from a checkpoint."""
         self.policy.load_state_dict(state["policy_state_dict"])
         self.optimizer.load_state_dict(state["optimizer_state_dict"])            

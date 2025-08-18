@@ -1,0 +1,14 @@
+defaults:
+  - algorithm: ppo
+  - env: humanoid
+  - _self
+
+training:
+  total_timesteps: 2_000_000
+  rollout_steps: 2048
+  learning_rate: 0.0003
+  seed: 42
+
+model: 
+policy_hidden_dims: [64, 64]
+value_hidden_dims: [64, 64]

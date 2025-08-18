@@ -3,6 +3,8 @@
     recieves ParamPatch events and validate them for rules, version and also prepare it for trainer.
 """
 from __future__ import annotations
+from typing import Optional
+from typing import Any
 import threading
 from .events import ParamPatch
 
@@ -11,7 +13,7 @@ StagedBatch = tuple[int, list[ParamPatch]]
 
 #Validate, version and stage hyperparams
 class HyperparamServer:
-    def __init__(self, initial_config: dict[str, any]):
+    def __init__(self, initial_config: dict[str, Any]):
         self._lock = threading.RLock()
         self._config = initial_config
         self._staged_batch: Optional[StagedBatch] = None
