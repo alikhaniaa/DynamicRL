@@ -1,8 +1,6 @@
 from typing import Generator
 import torch
 from .types import ActionType, Batch, DoneType, LogProbType, ObservationType, RewardType, ValueType
-from typing import Dict, Generator  # FIX: Added Dict import
-
 
 #Buffer for storing trajectories of experience for on-policy algorithms(for now PPO but logic can be applied without much of a refactor)
 class RolloutBuffer:
@@ -34,7 +32,7 @@ class RolloutBuffer:
         self.ptr += 1
         
     # Returns all stored data and resets the buffer.
-    def get_all(self) -> Dict[str, torch.Tensor]:
+    def get_all(self) -> dict[str, torch.Tensor]:
         
         if self.ptr != self.buffer_size:
             raise ValueError(f"Buffer is not full! Expected {self.buffer_size}, got {self.ptr}")

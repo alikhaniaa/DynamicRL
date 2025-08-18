@@ -4,7 +4,7 @@ import asyncio
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Literal, Optional, Sequence, Tuple, Union
+from typing import Literal, Optional, Union
 
 """
     communication structure(control plane) and a common lang for the framework
@@ -44,12 +44,12 @@ class ParamPatch:
     #dot notation path
     path: str
     op: PatchOp
-    value: Any
+    value: any
     
 #multi batch of hyperparam changes
 @dataclass(frozen=True, slots=True)
 class PatchBatch:
-    patches: Tuple[ParamPatch, ...]
+    patches: tuple[ParamPatch, ...]
     
 """
     Union type for all possible control plane events

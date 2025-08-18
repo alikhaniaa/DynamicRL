@@ -1,4 +1,3 @@
-from typing import Any, Dict, Tuple
 import torch
 import torch.optim as optim
 import numpy as np
@@ -14,7 +13,7 @@ from dynamicrl.core.types import Batch, ObservationType
     PPO implementation with logivs of policy, buffer, uptimizer and update
 """
 class PPOAlgorithm(RLAlgorithm):
-    def __init__(self, config: Dict[str, Any], obs_space: Any, act_space: Any):
+    def __init__(self, config: dict[str, any], obs_space: any, act_space: any):
         super().__init__(config, obs_space, act_space)
         self.device = torch.device("cpu" if torch.cuda.is_available() else "cuda") #TODO CHANGE THIS LATER
         
@@ -50,7 +49,7 @@ class PPOAlgorithm(RLAlgorithm):
         )
         
     #Runs the data collection loop for a full rollout
-    def collect_experiences(self, env: gym.Env, current_obs: np.ndarray) -> Tuple[np.ndarray, Dict[str, float]]:
+    def collect_experiences(self, env: gym.Env, current_obs: np.ndarray) -> tuple[np.ndarray, dict[str, float]]:
         episode_rewards = []
         
         for _ in range(self.rollout_steps):
@@ -99,7 +98,7 @@ class PPOAlgorithm(RLAlgorithm):
     
     
     # Run the PPO update using the data in the buffer
-    def update_policy(self) -> Dict[str, float]:
+    def update_policy(self) -> dict[str, float]:
         #Getting the raw data and compute advantage
         raw_data = self.buffer.get_all()
         
@@ -188,14 +187,14 @@ class PPOAlgorithm(RLAlgorithm):
         return {"policy_loss": sum(policy_losses) / len(policy_losses), "value_loss": sum(value_losses) / len(value_losses), "entropy": sum(entropy_bonuses) / len(entropy_bonuses)}
 
                 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, any]:
         """Returns the current state for checkpointing."""
         return {
             "policy_state_dict": self.policy.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
         }
 
-    def load_state(self, state: Dict[str, Any]):
+    def load_state(self, state: dict[str, any]):
         """Loads state from a checkpoint."""
         self.policy.load_state_dict(state["policy_state_dict"])
         self.optimizer.load_state_dict(state["optimizer_state_dict"])            

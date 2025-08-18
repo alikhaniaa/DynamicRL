@@ -4,15 +4,14 @@
 """
 from __future__ import annotations
 import threading
-from typing import Any, Dict, List, Optional, Tuple
 from .events import ParamPatch
 
 # type alias for a staged batch containing verion and patch
-StagedBatch = Tuple[int, List[ParamPatch]]
+StagedBatch = tuple[int, list[ParamPatch]]
 
 #Validate, version and stage hyperparams
 class HyperparamServer:
-    def __init__(self, initial_config: Dict[str, Any]):
+    def __init__(self, initial_config: dict[str, any]):
         self._lock = threading.RLock()
         self._config = initial_config
         self._staged_batch: Optional[StagedBatch] = None
@@ -32,7 +31,7 @@ class HyperparamServer:
         }
         
     #Policy layer for hyperparam changes
-    def _validate_patch(self, patch: ParamPatch) -> Tuple[bool, str]:
+    def _validate_patch(self, patch: ParamPatch) -> tuple[bool, str]:
         if patch.path in self._FORBIDDEN_PATHS:
             return False, f"Path '{patch.path}' is immutable and can't be changed at runtime."
         
@@ -49,7 +48,7 @@ class HyperparamServer:
         return True, "OK"
     
     #Validate and stages a batch of patches. entry point for producers
-    def stage_patches(self, patches: List[ParamPatch]) -> Tuple[bool, str]:
+    def stage_patches(self, patches: list[ParamPatch]) -> tuple[bool, str]:
         with self._lock:
             if self._staged_batch is not None:
                 return False, f"Can't stage new batch: version {self._staged_batch[0]} is already pending"
