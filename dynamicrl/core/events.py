@@ -84,6 +84,16 @@ class EventBus:
                 break
         return events
     
+    #sync version of get_all_pending for non-async callers
+    def get_all_pending_sync(self) -> list[EventEnvelope]:
+        events = []
+        while not self._queue.empty():
+            try:
+                events.append(self._queue.get_nowait())
+            except asyncio.QueueEmpty:
+                break
+        return events
+    
 
 
 
