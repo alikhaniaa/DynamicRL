@@ -6,14 +6,18 @@ import numpy as np
 #target func for each env subproc
 def worker(pipe, env_fn):
     env = env_fn()
+    is_discrete = isinstance(env.action_space, gym.spaces.Discrete) # Check action space type once
+
     while True:
         cmd, data = pipe.recv()
         if cmd == "step":
-            obs, reward, terminated, truncated, info = env.step(data)
-            done = terminated or truncated
-            if done:
-                obs, info = env.reset()
-            pipe.send((obs, reward, done, info))
+            action_to_step = data.item() if is_discrete else data
+            obs, reward, terminated, truncated, info = env.step(action_to_step)
+            if terminated or truncated:
+                info["final_observation"] = obs
+                info["final_info"] = info
+                obs, _ = env.reset()
+            pipe.send((obs, reward, terminated, truncated, info))
         elif cmd == "reset":
             obs, info = env.reset(seed=data)
             pipe.send((obs, info))
@@ -28,9 +32,10 @@ def worker(pipe, env_fn):
 class SyncVecEnv:
     def __init__(self, env_fns:list[Callable[[], gym.Env]]):
         self.num_envs = len(env_fns)
-        self.pipes, worker_pipes = zip(*[mp.Pipe() for _ in range(self.num_envs)])
+        ctx = mp.get_context("fork")
+        self.pipes, worker_pipes = zip(*[ctx.Pipe() for _ in range(self.num_envs)])
         self.procs = [
-            mp.Process(target=worker, args=(p, fn), daemon=True)
+            ctx.Process(target=worker, args=(p, fn), daemon=True)
             for p, fn in zip(worker_pipes, env_fns)
         ]
         for p in self.procs:
@@ -51,9 +56,9 @@ class SyncVecEnv:
             pipe.send(("step", action))
             
         results = [pipe.recv() for pipe in self.pipes]
-        obs, rewards, dones, infos = zip(*results)
+        obs, rewards, terminated, truncated, infos = zip(*results)
         
-        return np.stack(obs), np.array(rewards), np.array(dones), list(infos)
+        return (np.stack(obs), np.array(rewards),np.array(terminated),np.array(truncated),list(infos),)
     
     def reset(self, seed:int | None = None):
         for i, pipe in enumerate(self.pipes):
@@ -65,6 +70,9 @@ class SyncVecEnv:
     
     def close(self):
         for pipe in self.pipes:
-            pipe.send(("close", None))
+            try:
+                pipe.send(("close", None))
+            except BrokenPipeError:
+                pass 
         for p in self.procs:
             p.join()

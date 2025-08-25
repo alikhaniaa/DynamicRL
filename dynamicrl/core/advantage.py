@@ -5,20 +5,20 @@ from .types import DoneType, RewardType, ValueType
     Computes Generalized Advantage Estimation (GAE) for a batch of trajectories.
 """
 def compute_gae_advantages(
-    rewards: RewardType,
-    dones: DoneType,
-    values: ValueType,
-    last_value: ValueType,
+    rewards: torch.Tensor,
+    dones: torch.Tensor,
+    values: torch.Tensor,
+    last_value: torch.Tensor,
     gamma: float,
     gae_lambda: float,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-
-    buffer_size = len(rewards)
+    num_steps, num_envs = rewards.shape
+    # buffer_size = len(rewards)
     advantages = torch.zeros_like(rewards)
-    last_gae_lam = 0
+    last_gae_lam = torch.zeros(num_envs, device=rewards.device)
 
-    for t in reversed(range(buffer_size)):
-        if t == buffer_size - 1:
+    for t in reversed(range(num_steps)):
+        if t == num_steps - 1:
             next_value = last_value
         else:
             next_value = values[t + 1]

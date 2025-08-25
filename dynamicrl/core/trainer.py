@@ -43,7 +43,8 @@ class Trainer:
         logger.info(f"Run output directory: {self.output_dir}")
         
         #services
-        self.data_logger = DataLogger(self.cfg, self.output_dir)
+        OmegaConf.update(self.cfg, "output_dir", str(self.output_dir))
+        self.data_logger = DataLogger(self.cfg)
         self.checkpoint_manager = CheckpointManager(
             save_dir=self.output_dir / "checkpoints",
             max_to_keep=self.cfg.training.get("checkpoints_to_keep", 5),
@@ -53,7 +54,7 @@ class Trainer:
         
         #Envs
         env_fns = [
-            lambda: gym.make(self.cfg.env.name),
+            lambda: gym.make(self.cfg.env.name)
             for _ in range(self.cfg.env.num_envs)
         ]
         self.env = SyncVecEnv(env_fns)
@@ -64,11 +65,11 @@ class Trainer:
         if not AlgorithmClass:
             raise ValueError(f"Unknown algorithm: '{algo_name}'")
         self.algorithm: RLAlgorithm = AlgorithmClass(
-            config=self.cfg,
+            cfg=self.cfg, # Use 'cfg' to match the PPOAlgorithm's definition
             obs_space=self.env.observation_space,
             act_space=self.env.action_space,
         )
-        logger.info(f"Algorithm '{algo_name}' initialized successfully")
+        logger.info(f"Algorithm '{algo_name}' initialized successfully.")
         
     #**Taining loop
     def train(self) -> None:
@@ -111,12 +112,12 @@ class Trainer:
             #checkpoints
             checkpoint_interval = self.cfg.training.get("checkpoint_interval", 0)
             if checkpoint_interval > 0 and self.global_step >= self.last_checkpoint_step + checkpoint_interval:
-                self._save_checkpoints()
+                self._save_checkpoint()
                 self.last_checkpoint_step = self.global_step
                 
         self._save_checkpoint(tag="final")
         self.close()
-        logger.info("Training Finished")
+        logger.info("Training finished")
     def _handle_control_events(self) -> None:
         pending_events = self.event_bus.get_all_pending_sync()
         if not pending_events:

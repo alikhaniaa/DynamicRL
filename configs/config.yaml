@@ -1,14 +1,22 @@
 defaults:
   - algorithm: ppo
   - env: humanoid
-  - _self
+  - _self_
+
+output_dir: null
+
+logging:
+  enable_console: True
+  enable_csv: True
+  enable_tensorboard: False
 
 training:
   total_timesteps: 2_000_000
   rollout_steps: 2048
   learning_rate: 0.0003
   seed: 42
+  checkpoint_interval: 1000000
 
 model: 
-policy_hidden_dims: [64, 64]
-value_hidden_dims: [64, 64]
+  policy_hidden_dims: [64, 64]
+  value_hidden_dims: [64, 64]

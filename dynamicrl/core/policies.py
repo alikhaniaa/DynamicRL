@@ -1,12 +1,15 @@
 """
     NN module for the agent. absrtact classes to define a contract for policies or value networks
 """
+import logging
 from abc import ABC, abstractmethod
 from .types import ActionType, LogProbType, ObservationType, ValueType
-
+import gymnasium as gym
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical, Normal
+
+logger = logging.getLogger(__name__)
 
 #Abstract base class for actor(policy network)
 class PolicyNetworkBase(ABC, nn.Module):
@@ -28,8 +31,14 @@ class ValueNetworkBase(ABC, nn.Module):
     
 #Imp of Actor-Critic network with a shared MLP body designed for --continuous-- action spaces
 class ActorCriticMLP(PolicyNetworkBase, ValueNetworkBase):
-    def __init__(self, obs_dim: int, act_dim: int, hidden_sizes: tuple[int, ...] = (64, 64)):
+    def __init__(self, obs_dim: int, act_space: gym.spaces.Space, hidden_sizes: tuple[int, ...] = (64, 64)):
         super().__init__()
+        
+        self.is_continuous = isinstance(act_space, gym.spaces.Box)
+        if self.is_continuous:
+            logger.info("Initializing ActorCriticMLP for a CONTINIUOUS action space")
+        else:
+            logger.info("Initializing ActorCriticMLP for a DISCRETE action space")
         
         #shared feature extracture
         shared_layers = []
@@ -41,26 +50,37 @@ class ActorCriticMLP(PolicyNetworkBase, ValueNetworkBase):
         self.shared_net = nn.Sequential(*shared_layers)
         
         #Policy(actor)
-        self.policy_head = nn.Linear(input_dim, act_dim)
-        
+        if self.is_continuous:
+            act_dim = act_space.shape[0]
+            self.policy_head = nn.Linear(input_dim, act_dim)
+            #Learnable param for the SD of action distribution
+            self.log_std = nn.Parameter(torch.zeros(act_dim))
+        else:
+            act_dim = act_space.n
+            self.policy_head = nn.Linear(input_dim, act_dim)
         #Value(critic)
         self.value_head = nn.Linear(input_dim, 1)
-        
-        #Learnable param for the SD of action distribution
-        self.log_std = nn.Parameter(torch.zeros(act_dim))
-        
+                
     #Given observation and recieve Gaussian policy distribution
-    def get_distribution(self, obs: ObservationType) -> Normal:
+    def get_distribution(self, obs: ObservationType) -> torch.distributions.Distribution:
         features = self.shared_net(obs)
-        mean = self.policy_head(features)
-        std = torch.exp(self.log_std)
-        return Normal(mean, std)
+        if self.is_continuous:
+            mean = self.policy_head(features)
+            std = torch.exp(self.log_std)
+            return Normal(mean, std)
+        else: 
+            logits = self.policy_head(features)
+            return Categorical(logits=logits)
     
     #Sample action and logProb for data collection
     def forward(self, obs: ObservationType) -> tuple[ActionType, LogProbType]:
         dist = self.get_distribution(obs)
         action = dist.sample()
-        log_prob = dist.log_prob(action).sum(axis=-1)
+        if self.is_continuous:
+            log_prob = dist.log_prob(action).sum(axis=-1)
+        else: 
+            log_prob = dist.log_prob(action)
+        
         return action, log_prob
     
     def predict_value(self, obs: ObservationType) -> ValueType:
@@ -70,10 +90,13 @@ class ActorCriticMLP(PolicyNetworkBase, ValueNetworkBase):
     #Evaluate given action to compute their logProbs, policy entropy and state values --during-- PPO updates
     def evaluate_actions(self, obs: ObservationType, action: ActionType) -> tuple[LogProbType, torch.Tensor, ValueType]:
         dist = self.get_distribution(obs)
-        log_prob = dist.log_prob(action).sum(axis=-1)
-        entropy = dist.entropy().sum(axis=-1)
         
-        features = self.shared_net(obs)
-        value = self.value_head(features).squeeze(-1)
+        if self.is_continuous:
+            log_prob = dist.log_prob(action).sum(axis=-1)
+        else:
+            log_prob = dist.log_prob(action)
+        
+        entropy = dist.entropy().sum(axis=-1)
+        value = self.predict_value(obs)
         
         return log_prob, entropy, value

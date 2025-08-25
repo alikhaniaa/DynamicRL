@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+  - override /algorithm: ppo
+  - override /env: cartpole
+
+training:
+  total_timesteps: 8192
+  rollout_steps: 512
+  checkpoint_interval: 4096

@@ -4,14 +4,15 @@
 """
 from abc import ABC, abstractmethod
 from typing import Any
+from omegaconf import DictConfig
 import torch
 from .policies import PolicyNetworkBase, ValueNetworkBase
 from .data_buffer import RolloutBuffer
 from .types import ObservationType
 
 class RLAlgorithm(ABC):
-    def __init__(self, config: dict[str, Any], obs_space: Any, act_space: Any):
-        self.config = config
+    def __init__(self, cfg: DictConfig, obs_space: Any, act_space: Any):
+        self.cfg = cfg # Also change it here
         self.obs_space = obs_space
         self.act_space = act_space
         

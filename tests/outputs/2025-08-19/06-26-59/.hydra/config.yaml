@@ -1,0 +1,24 @@
+algorithm:
+  name: ppo
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_epsilon: 0.2
+  entropy_coef: 0.0
+  value_coef: 0.5
+  num_epochs: 10
+  minibatch_size: 64
+env:
+  name: Humanoid-v5
+  num_envs: 1
+training:
+  total_timesteps: 2000000
+  rollout_steps: 2048
+  learning_rate: 0.0003
+  seed: 42
+model: null
+policy_hidden_dims:
+- 64
+- 64
+value_hidden_dims:
+- 64
+- 64
